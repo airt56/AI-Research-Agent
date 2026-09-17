@@ -1,4 +1,4 @@
-name: Daily Research Agent Test
+name: Daily Research Agent
 
 
 on:
@@ -8,7 +8,7 @@ on:
 
 jobs:
 
-  test:
+  research:
 
 
     runs-on: ubuntu-latest
@@ -22,6 +22,7 @@ jobs:
       uses: actions/checkout@v4
 
 
+
     - name: Setup Python
 
       uses: actions/setup-python@v5
@@ -31,7 +32,47 @@ jobs:
         python-version: "3.11"
 
 
-    - name: Run Python
+
+    - name: Install dependencies
+
+      run:
+
+        pip install -r requirements.txt
+
+
+
+    - name: Run Research Agent
+
+      env:
+
+
+        # Zotero
+
+        ZOTERO_ID: ${{ secrets.ZOTERO_ID }}
+
+        ZOTERO_KEY: ${{ secrets.ZOTERO_KEY }}
+
+
+
+        # DeepSeek
+
+        DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+
+        DEEPSEEK_API_BASE: ${{ secrets.DEEPSEEK_API_BASE }}
+
+
+
+        # Email
+
+        SENDER: ${{ secrets.SENDER }}
+
+        RECEIVER: ${{ secrets.RECEIVER }}
+
+        RECEIVER_2: ${{ secrets.RECEIVER_2 }}
+
+        SENDER_PASSWORD: ${{ secrets.SENDER_PASSWORD }}
+
+
 
       run:
 
