@@ -1,360 +1,183 @@
 import os
+import json
+import random
+import requests
 import smtplib
-
 from email.mime.text import MIMEText
 from email.header import Header
-
-from pyzotero import zotero
 from openai import OpenAI
 
-
-
-# ==================================================
-# Environment Variables
-# ==================================================
-
-ZOTERO_ID = os.environ["ZOTERO_ID"]
-ZOTERO_KEY = os.environ["ZOTERO_KEY"]
-
+HISTORY_FILE = "papers_history.json"
 
 DEEPSEEK_API_KEY = os.environ["DEEPSEEK_API_KEY"]
 DEEPSEEK_API_BASE = os.environ["DEEPSEEK_API_BASE"]
 
-
 SENDER = os.environ["SENDER"]
 SENDER_PASSWORD = os.environ["SENDER_PASSWORD"]
-
 RECEIVER = os.environ["RECEIVER"]
 RECEIVER_2 = os.environ["RECEIVER_2"]
 
-
-
-# ==================================================
-# 1. Connect Zotero
-# ==================================================
-
-print("Connecting Zotero...")
-
-
-zot = zotero.Zotero(
-    ZOTERO_ID,
-    "user",
-    ZOTERO_KEY
-)
-
-
-papers = zot.top(
-    limit=5
-)
-
-
-print(
-    f"Found {len(papers)} papers"
-)
-
-
-
-# ==================================================
-# 2. Extract papers
-# ==================================================
-
-paper_content = ""
-
-
-for i, paper in enumerate(papers):
-
-
-    data = paper["data"]
-
-
-    title = data.get(
-        "title",
-        "No title"
-    )
-
-
-    abstract = data.get(
-        "abstractNote",
-        "No abstract"
-    )
-
-
-    year = data.get(
-        "date",
-        ""
-    )
-
-
-    paper_content += f"""
-
-==============================
-
-Paper {i+1}
-
-Title:
-{title}
-
-
-Year:
-{year}
-
-
-Abstract:
-{abstract}
-
-
-"""
-
-
-
-# ==================================================
-# 3. DeepSeek Analysis
-# ==================================================
-
-print("Calling DeepSeek...")
-
-
-client = OpenAI(
-
-    api_key=DEEPSEEK_API_KEY,
-
-    base_url=DEEPSEEK_API_BASE
-
-)
-
-
-
-prompt = f"""
-
-你是一名高级科研助手。
-
-
-我的研究方向：
-
-- Interactive Art 交互艺术
-- Art and Technology 艺术与科技
-- Spatial Design 空间设计
-- Human Computer Interaction 人机交互
-- Computational Design 计算设计
-- Generative Design 生成式设计
-- AI + TouchDesigner
-
-
-请分析以下5篇论文。
-
-
-每篇论文严格按照以下结构输出：
-
-
-# 今日论文分析
-
-
-## 1. 标题
-
-英文标题：
-
-中文标题：
-
-
-## 2. 摘要中文翻译
-
-
-完整翻译摘要。
-
-
-## 3. 研究问题
-
-说明：
-
-- 作者解决什么问题？
-- 为什么这个问题重要？
-
-
-## 4. 研究方法
-
-
-包括：
-
-- 数据来源
-- 实验设计
-- 技术方法
-- 分析方法
-- 评价指标
-
-
-## 5. 创新点
-
-
-分析：
-
-- 理论创新
-- 方法创新
-- 技术创新
-- 应用创新
-
-
-## 6. 与我的研究关系
-
-
-重点分析：
-
-- AI相关性
-- 交互艺术相关性
-- 空间设计相关性
-- TouchDesigner可实现性
-- 可借鉴实验方法
-
-
-## 7. 潜在SCI研究启发
-
-
-提出：
-
-- 可以形成的新研究问题
-- 可以复刻的方法
-- 可能的实验设计
-
-
-论文如下：
-
-{paper_content}
-
-
-请使用中文回答。
-
-
-
-"""
-
-
-
-response = client.chat.completions.create(
-
-    model="deepseek-v4-flash",
-
-    messages=[
-
-        {
-
-            "role": "user",
-
-            "content": prompt
-
-        }
-
-    ]
-
-)
-
-
-
-analysis_result = response.choices[0].message.content
-
-
-
-print("AI analysis finished")
-
-
-
-# ==================================================
-# 4. Send Email QQ SMTP
-# ==================================================
-
-print("Connecting QQ Mail SMTP...")
-
-
-subject = "今日论文分析"
-
-
-
-message = MIMEText(
-
-    analysis_result,
-
-    "plain",
-
-    "utf-8"
-
-)
-
-
-message["Subject"] = Header(
-    subject,
-    "utf-8"
-)
-
-
-message["From"] = SENDER
-
-
-receivers = [
-
-    RECEIVER,
-
-    RECEIVER_2
-
+KEYWORDS = [
+    "interactive art",
+    "human computer interaction",
+    "human AI interaction",
+    "spatial computing",
+    "computational design",
+    "generative design",
+    "AI architecture",
+    "immersive environment",
+    "creative AI",
+    "digital twin"
 ]
 
 
-message["To"] = ",".join(receivers)
+def load_history():
+    if not os.path.exists(HISTORY_FILE):
+        return {"papers": []}
+    with open(HISTORY_FILE, "r", encoding="utf-8") as f:
+        return json.load(f)
 
 
+def save_history(data):
+    with open(HISTORY_FILE, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
 
-try:
+
+def get_papers():
+    papers = []
+    for keyword in KEYWORDS:
+        response = requests.get(
+            "https://api.openalex.org/works",
+            params={
+                "search": keyword,
+                "filter": "from_publication_date:2024-01-01",
+                "sort": "cited_by_count:desc",
+                "per-page": 10
+            },
+            timeout=30
+        )
+
+        for item in response.json().get("results", []):
+            papers.append({
+                "title": item.get("title", ""),
+                "doi": item.get("doi", ""),
+                "year": item.get("publication_year", ""),
+                "citation": item.get("cited_by_count", 0)
+            })
+
+    return papers
 
 
-    server = smtplib.SMTP_SSL(
+def remove_duplicate(papers, history):
+    old = history.get("papers", [])
+    result = []
 
-        "smtp.qq.com",
+    for paper in papers:
+        key = paper["doi"] or paper["title"]
+        if key not in old:
+            result.append(paper)
 
-        465
+    return result[:5]
 
+
+def analyze_with_deepseek(papers):
+    client = OpenAI(
+        api_key=DEEPSEEK_API_KEY,
+        base_url=DEEPSEEK_API_BASE
     )
 
-
-    server.login(
-
-        SENDER,
-
-        SENDER_PASSWORD
-
+    paper_text = "\n\n".join(
+        [
+            f"Title: {p['title']}\nDOI: {p['doi']}"
+            for p in papers
+        ]
     )
 
+    prompt = f"""
+你是一名AI、交互艺术、空间设计方向科研助手。
 
-    print(
-        "SMTP login successful"
+我的研究方向：
+AI + TouchDesigner + Interactive Art + Spatial Design + HCI + Computational Design
+
+请分析以下论文。
+
+每篇输出：
+
+1. 英文标题 + 中文标题
+2. 期刊/会议名称、SCI/SSCI/AHCI/顶会信息
+3. 第一作者、单位、研究简介
+4. 通讯作者、单位、身份简介
+5. 摘要中文
+6. 研究方法
+7. 研究亮点
+8. 与我的研究关系
+9. 潜在SCI选题启发
+
+论文：
+
+{paper_text}
+
+请使用中文。
+"""
+
+    response = client.chat.completions.create(
+        model="deepseek-v4-flash",
+        messages=[
+            {
+                "role": "user",
+                "content": prompt
+            }
+        ]
     )
 
+    return response.choices[0].message.content
 
+
+def send_email(content):
+    messages = [
+        "🐷 超级贝猪，今天也要认真学习哦！每天一点积累，都会成为未来研究的力量。",
+        "🐷 超级贝猪，新的论文已经准备好啦，坚持阅读，坚持成长！",
+        "🐷 超级贝猪，今天也一起探索新的知识吧，说不定会发现新的研究灵感。"
+    ]
+
+    body = random.choice(messages) + "\n\n" + content
+
+    msg = MIMEText(body, "plain", "utf-8")
+    msg["Subject"] = Header("今日论文分析", "utf-8")
+    msg["From"] = SENDER
+    msg["To"] = RECEIVER + "," + RECEIVER_2
+
+    server = smtplib.SMTP_SSL("smtp.qq.com", 465)
+    server.login(SENDER, SENDER_PASSWORD)
     server.sendmail(
-
         SENDER,
-
-        receivers,
-
-        message.as_string()
-
+        [RECEIVER, RECEIVER_2],
+        msg.as_string()
     )
-
-
     server.quit()
 
 
-    print(
-        "Email sent successfully"
+if __name__ == "__main__":
+
+    history = load_history()
+
+    papers = remove_duplicate(
+        get_papers(),
+        history
     )
 
+    if not papers:
+        raise Exception("No new papers found")
 
+    result = analyze_with_deepseek(papers)
 
-except Exception as e:
+    send_email(result)
 
+    for paper in papers:
+        history["papers"].append(
+            paper["doi"] or paper["title"]
+        )
 
-    print(
-        "Email sending failed:"
-    )
+    save_history(history)
 
-
-    print(e)
-
-
-    raise e
+    print("Email sent successfully")
