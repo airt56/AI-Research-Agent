@@ -235,7 +235,7 @@ receivers = [
 
 server = smtplib.SMTP_SSL(
 
-    "smtp.126.com",
+    "smtp.qq.com",
 
     465
 
