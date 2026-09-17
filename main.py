@@ -1,31 +1,37 @@
 import os
 import smtplib
+
 from email.mime.text import MIMEText
+from email.header import Header
 
 from pyzotero import zotero
 from openai import OpenAI
 
 
-# ==========================
-# 环境变量
-# ==========================
+
+# ==================================================
+# Environment Variables
+# ==================================================
 
 ZOTERO_ID = os.environ["ZOTERO_ID"]
 ZOTERO_KEY = os.environ["ZOTERO_KEY"]
 
+
 DEEPSEEK_API_KEY = os.environ["DEEPSEEK_API_KEY"]
 DEEPSEEK_API_BASE = os.environ["DEEPSEEK_API_BASE"]
 
+
 SENDER = os.environ["SENDER"]
-RECEIVER = os.environ["RECEIVER"]
-RECEIVER_2 = os.environ["RECEIVER_2"]
 SENDER_PASSWORD = os.environ["SENDER_PASSWORD"]
 
+RECEIVER = os.environ["RECEIVER"]
+RECEIVER_2 = os.environ["RECEIVER_2"]
 
 
-# ==========================
-# 连接 Zotero
-# ==========================
+
+# ==================================================
+# 1. Connect Zotero
+# ==================================================
 
 print("Connecting Zotero...")
 
@@ -48,35 +54,52 @@ print(
 
 
 
+# ==================================================
+# 2. Extract papers
+# ==================================================
+
 paper_content = ""
 
 
 for i, paper in enumerate(papers):
 
-    title = paper["data"].get(
+
+    data = paper["data"]
+
+
+    title = data.get(
         "title",
-        ""
+        "No title"
     )
 
-    abstract = paper["data"].get(
+
+    abstract = data.get(
         "abstractNote",
+        "No abstract"
+    )
+
+
+    year = data.get(
+        "date",
         ""
     )
 
 
     paper_content += f"""
 
-======================
+==============================
 
 Paper {i+1}
 
 Title:
-
 {title}
 
 
-Abstract:
+Year:
+{year}
 
+
+Abstract:
 {abstract}
 
 
@@ -84,62 +107,85 @@ Abstract:
 
 
 
-# ==========================
-# DeepSeek
-# ==========================
-
+# ==================================================
+# 3. DeepSeek Analysis
+# ==================================================
 
 print("Calling DeepSeek...")
 
 
 client = OpenAI(
+
     api_key=DEEPSEEK_API_KEY,
+
     base_url=DEEPSEEK_API_BASE
+
 )
 
 
 
 prompt = f"""
 
-你是一名设计学、建筑环境与人工智能方向科研助手。
+你是一名高级科研助手。
 
 
 我的研究方向：
 
-AI + TouchDesigner + Interactive Art + Spatial Design + Human Computer Interaction + Computational Design
+- Interactive Art 交互艺术
+- Art and Technology 艺术与科技
+- Spatial Design 空间设计
+- Human Computer Interaction 人机交互
+- Computational Design 计算设计
+- Generative Design 生成式设计
+- AI + TouchDesigner
 
 
 请分析以下5篇论文。
 
 
-每篇论文严格按照：
+每篇论文严格按照以下结构输出：
+
 
 # 今日论文分析
 
 
-## 1. 标题（英文 + 中文）
+## 1. 标题
+
+英文标题：
+
+中文标题：
 
 
 ## 2. 摘要中文翻译
 
 
+完整翻译摘要。
+
+
 ## 3. 研究问题
+
+说明：
+
+- 作者解决什么问题？
+- 为什么这个问题重要？
 
 
 ## 4. 研究方法
+
 
 包括：
 
 - 数据来源
 - 实验设计
 - 技术方法
-- 评价方式
+- 分析方法
+- 评价指标
 
 
 ## 5. 创新点
 
 
-包括：
+分析：
 
 - 理论创新
 - 方法创新
@@ -150,32 +196,36 @@ AI + TouchDesigner + Interactive Art + Spatial Design + Human Computer Interacti
 ## 6. 与我的研究关系
 
 
-分析：
+重点分析：
 
-- TouchDesigner相关性
 - AI相关性
-- 交互设计相关性
-- 空间设计应用可能
+- 交互艺术相关性
+- 空间设计相关性
+- TouchDesigner可实现性
+- 可借鉴实验方法
 
 
-## 7. 潜在SCI选题启发
+## 7. 潜在SCI研究启发
 
 
 提出：
 
-- 可以借鉴的方法
 - 可以形成的新研究问题
-- 可能实验设计
+- 可以复刻的方法
+- 可能的实验设计
 
 
-论文：
+论文如下：
 
 {paper_content}
 
-请使用中文输出。
+
+请使用中文回答。
+
 
 
 """
+
 
 
 response = client.chat.completions.create(
@@ -185,8 +235,11 @@ response = client.chat.completions.create(
     messages=[
 
         {
+
             "role": "user",
+
             "content": prompt
+
         }
 
     ]
@@ -195,7 +248,7 @@ response = client.chat.completions.create(
 
 
 
-result = response.choices[0].message.content
+analysis_result = response.choices[0].message.content
 
 
 
@@ -203,69 +256,105 @@ print("AI analysis finished")
 
 
 
-# ==========================
-# 邮件发送
-# ==========================
+# ==================================================
+# 4. Send Email QQ SMTP
+# ==================================================
+
+print("Connecting QQ Mail SMTP...")
 
 
 subject = "今日论文分析"
 
 
-msg = MIMEText(
-    result,
+
+message = MIMEText(
+
+    analysis_result,
+
     "plain",
+
+    "utf-8"
+
+)
+
+
+message["Subject"] = Header(
+    subject,
     "utf-8"
 )
 
 
-msg["Subject"] = subject
-msg["From"] = SENDER
-msg["To"] = RECEIVER
-
+message["From"] = SENDER
 
 
 receivers = [
 
     RECEIVER,
+
     RECEIVER_2
 
 ]
 
 
-
-server = smtplib.SMTP_SSL(
-
-    "smtp.qq.com",
-
-    465
-
-)
-
-
-server.login(
-
-    SENDER,
-
-    SENDER_PASSWORD
-
-)
+message["To"] = ",".join(receivers)
 
 
 
-server.sendmail(
-
-    SENDER,
-
-    receivers,
-
-    msg.as_string()
-
-)
+try:
 
 
+    server = smtplib.SMTP_SSL(
 
-server.quit()
+        "smtp.qq.com",
+
+        465
+
+    )
+
+
+    server.login(
+
+        SENDER,
+
+        SENDER_PASSWORD
+
+    )
+
+
+    print(
+        "SMTP login successful"
+    )
+
+
+    server.sendmail(
+
+        SENDER,
+
+        receivers,
+
+        message.as_string()
+
+    )
+
+
+    server.quit()
+
+
+    print(
+        "Email sent successfully"
+    )
 
 
 
-print("Email sent successfully")
+except Exception as e:
+
+
+    print(
+        "Email sending failed:"
+    )
+
+
+    print(e)
+
+
+    raise e
