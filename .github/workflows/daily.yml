@@ -5,9 +5,9 @@ name: Daily Research Agent
 
   schedule:
 
-    # 北京时间每天12:20
-    # UTC 04:20
-    - cron: "20 4 * * *"
+    # 北京时间每天13:00
+    # UTC 05:00
+    - cron: "0 5 * * *"
 
 
   workflow_dispatch:
