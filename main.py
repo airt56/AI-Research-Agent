@@ -2,7 +2,7 @@ import os
 import json
 import random
 import smtplib
-import requests
+
 import feedparser
 
 from datetime import datetime
@@ -10,7 +10,9 @@ from datetime import datetime
 from email.mime.text import MIMEText
 from email.header import Header
 
+
 from openai import OpenAI
+
 
 from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
@@ -22,37 +24,53 @@ from sklearn.metrics.pairwise import cosine_similarity
 # ==================================================
 
 DEEPSEEK_API_KEY = os.environ["DEEPSEEK_API_KEY"]
+
 DEEPSEEK_API_BASE = os.environ["DEEPSEEK_API_BASE"]
 
+
 SENDER = os.environ["SENDER"]
+
 SENDER_PASSWORD = os.environ["SENDER_PASSWORD"]
 
+
 RECEIVER = os.environ["RECEIVER"]
+
 RECEIVER_2 = os.environ["RECEIVER_2"]
 
 
+
 HISTORY_FILE = "papers_history.json"
+
 PROFILE_FILE = "research_profile.json"
 
 
 
+
 # ==================================================
-# Load Research Profile
+# Load Profile
 # ==================================================
 
 def load_profile():
 
+
     with open(
+
         PROFILE_FILE,
+
         "r",
+
         encoding="utf-8"
+
     ) as f:
+
 
         return json.load(f)
 
 
 
+
 profile = load_profile()
+
 
 
 
@@ -62,69 +80,99 @@ profile = load_profile()
 
 def load_history():
 
+
     if not os.path.exists(HISTORY_FILE):
 
         return {
+
             "papers":[]
+
         }
 
 
     with open(
+
         HISTORY_FILE,
+
         "r",
+
         encoding="utf-8"
+
     ) as f:
+
 
         return json.load(f)
 
 
 
+
 def save_history(history):
 
+
     with open(
+
         HISTORY_FILE,
+
         "w",
+
         encoding="utf-8"
+
     ) as f:
 
+
         json.dump(
+
             history,
+
             f,
+
             ensure_ascii=False,
+
             indent=2
+
         )
 
 
 
+
+
 # ==================================================
-# arXiv
+# arXiv Search
 # ==================================================
 
 def search_arxiv():
 
+
     papers=[]
 
 
-    categories=[
 
-        "cs.AI",
-        "cs.HC",
-        "cs.GR",
-        "cs.CV"
+    categories = profile[
+
+        "preferred_arxiv_categories"
 
     ]
 
 
-    for cat in categories:
+
+    for category in categories:
 
 
-        url = (
+
+        url=(
+
             "https://export.arxiv.org/api/query?"
-            f"search_query=cat:{cat}"
+
+            f"search_query=cat:{category}"
+
             "&sortBy=submittedDate"
+
             "&sortOrder=descending"
-            "&max_results=15"
+
+            "&max_results=20"
+
         )
+
 
 
         feed = feedparser.parse(url)
@@ -134,159 +182,48 @@ def search_arxiv():
         for item in feed.entries:
 
 
-            papers.append({
 
-                "title":
-                item.title.replace("\n"," "),
+            title = item.title.replace(
 
-                "abstract":
-                item.summary,
+                "\n",
 
-                "source":
-                "arXiv",
+                " "
 
-                "journal":
-                "arXiv preprint",
-
-                "doi":
-                "",
-
-                "year":
-                datetime.now().year
-
-            })
-
-
-    return papers
-
-
-
-
-# ==================================================
-# OpenAlex
-# ==================================================
-
-def search_openalex():
-
-
-    papers=[]
-
-
-    keywords = profile["keywords"]
-
-
-
-    for keyword in keywords:
-
-
-        url="https://api.openalex.org/works"
-
-
-        params={
-
-            "search":
-            keyword,
-
-            "filter":
-            "from_publication_date:2020-01-01",
-
-            "sort":
-            "cited_by_count:desc",
-
-            "per-page":
-            15
-
-        }
-
-
-
-        r=requests.get(
-
-            url,
-
-            params=params,
-
-            timeout=30
-
-        )
-
-
-
-        data=r.json()
-
-
-
-        for item in data.get(
-            "results",
-            []
-        ):
-
-
-            title=item.get(
-                "title",
-                ""
             )
 
 
-            if not title:
+            abstract = item.summary.replace(
 
-                continue
+                "\n",
 
+                " "
 
-
-            journal=""
-
-
-            if item.get(
-                "primary_location"
-            ):
-
-                source=item[
-                    "primary_location"
-                ].get(
-                    "source"
-                )
+            )
 
 
-                if source:
 
-                    journal=source.get(
-                        "display_name",
-                        ""
-                    )
+            link = item.link
 
 
 
             papers.append({
 
-                "title":
-                title,
+                "title":title,
 
-                "abstract":
-                "",
+                "abstract":abstract,
 
-                "source":
-                "OpenAlex",
+                "source":"arXiv",
 
-                "journal":
-                journal,
+                "link":link,
 
-                "doi":
-                item.get(
-                    "doi",
-                    ""
-                ),
-
-                "year":
-                item.get(
-                    "publication_year",
-                    ""
-                )
+                "date":str(datetime.now())
 
             })
 
 
+
     return papers
+
 
 
 
@@ -296,44 +233,51 @@ def search_openalex():
 # ==================================================
 
 def remove_duplicate(
+
         papers,
+
         history
+
 ):
 
 
-    old=set()
+    old_titles=set()
 
 
-    for p in history["papers"]:
 
-        old.add(
-            p.get(
-                "title",
-                ""
-            )
+    for item in history.get(
+
+        "papers",
+
+        []
+
+    ):
+
+
+        old_titles.add(
+
+            item["title"]
+
         )
-
-
-        if p.get("doi"):
-
-            old.add(
-                p["doi"]
-            )
 
 
 
     result=[]
 
 
-    for p in papers:
+
+    for paper in papers:
 
 
-        key=p["doi"] if p["doi"] else p["title"]
+
+        if paper["title"] not in old_titles:
 
 
-        if key not in old:
+            result.append(
 
-            result.append(p)
+                paper
+
+            )
 
 
 
@@ -341,11 +285,17 @@ def remove_duplicate(
 
 
 
+
+
 # ==================================================
 # Embedding Ranking
 # ==================================================
 
-def ranking(papers):
+def rank_papers(
+
+        papers
+
+):
 
 
     if len(papers)<=5:
@@ -354,68 +304,96 @@ def ranking(papers):
 
 
 
-    model=SentenceTransformer(
+    print(
+
+        "Loading embedding model..."
+
+    )
+
+
+
+    model = SentenceTransformer(
+
         "all-MiniLM-L6-v2"
-    )
-
-
-
-    interest=" ".join(
-
-        profile["research_topics"]
 
     )
 
 
 
-    interest_vector=model.encode(
 
-        [interest]
+    research_text = " ".join(
+
+        profile["research_direction"]
+
+        +
+
+        profile["future_technology_interest"]
 
     )
 
 
 
-    texts=[]
+    research_vector = model.encode(
+
+        [
+
+            research_text
+
+        ]
+
+    )
 
 
-    for p in papers:
 
-        texts.append(
+    paper_texts=[]
 
-            p["title"]
+
+
+    for paper in papers:
+
+
+        paper_texts.append(
+
+            paper["title"]
+
             +
+
             " "
+
             +
-            p.get(
-                "abstract",
-                ""
-            )
+
+            paper["abstract"]
 
         )
 
 
 
-    vectors=model.encode(
-        texts
+    paper_vectors=model.encode(
+
+        paper_texts
+
     )
 
 
 
     scores=cosine_similarity(
 
-        interest_vector,
+        research_vector,
 
-        vectors
+        paper_vectors
 
     )[0]
 
 
 
-    for i,p in enumerate(papers):
 
-        p["score"]=float(
+    for i,paper in enumerate(papers):
+
+
+        paper["score"]=float(
+
             scores[i]
+
         )
 
 
@@ -429,7 +407,10 @@ def ranking(papers):
     )
 
 
+
     return papers[:5]
+
+
 
 
 
@@ -437,7 +418,11 @@ def ranking(papers):
 # DeepSeek
 # ==================================================
 
-def analyze(papers):
+def analyze_papers(
+
+        papers
+
+):
 
 
     client=OpenAI(
@@ -450,33 +435,41 @@ def analyze(papers):
 
 
 
-    text=""
+    content=""
 
 
-    for i,p in enumerate(papers):
+
+    for i,paper in enumerate(papers):
 
 
-        text+=f"""
+        content += f"""
 
 论文{i+1}
 
+
 标题:
-{p['title']}
 
-来源:
-{p['source']}
+{paper['title']}
 
-期刊:
-{p['journal']}
 
-DOI:
-{p['doi']}
+arXiv链接:
+
+{paper['link']}
+
 
 摘要:
-{p.get('abstract','')}
+
+{paper['abstract']}
 
 
-----------------------
+相关度评分:
+
+{paper['score']}
+
+
+
+==============================
+
 
 """
 
@@ -484,14 +477,18 @@ DOI:
 
     prompt=f"""
 
-你是我的博士研究助手。
+你是一名博士研究助手。
+
 
 我的研究方向：
 
-AI + TouchDesigner + Interactive Art + Spatial Design + Computational Design + Architecture + Elderly Architecture + HCI
+AI + TouchDesigner + Interactive Art + Spatial Design + Architecture + Elderly Architecture + Human Computer Interaction
 
 
-请分析以下论文。
+下面是今天从arXiv筛选出的最新计算机论文。
+
+
+请分析这些论文。
 
 
 输出格式：
@@ -500,22 +497,20 @@ AI + TouchDesigner + Interactive Art + Spatial Design + Computational Design + A
 🐷超级贝猪每日论文分析
 
 
-英文标题（中文标题）
+1. 英文标题
+
+中文标题
 
 
-期刊/会议：
-如果无法确认SCI分区，不要编造。
+来源：
+
+arXiv
 
 
-第一作者：
-姓名 + 单位（如果数据库没有，请说明）
+研究方向：
 
 
-通讯作者：
-姓名 + 单位（如果数据库没有，请说明）
-
-
-摘要中文：
+论文摘要中文：
 
 
 研究方法：
@@ -523,31 +518,56 @@ AI + TouchDesigner + Interactive Art + Spatial Design + Computational Design + A
 
 研究亮点：
 
-
-对我的研究启发：
-
-重点分析：
-
-1. AI应用
-
-2. 交互设计
-
-3. 空间设计
-
-4. 老年建筑
-
-5. 可形成SCI研究方向
+-
 
 
+-
 
-论文之间使用：
+
+-
+
+
+为什么值得建筑设计领域关注：
+
+
+重点结合：
+
+AI
+
+空间设计
+
+交互艺术
+
+TouchDesigner
+
+数字孪生
+
+智能建筑
+
+老年建筑
+
+
+未来可能形成的研究方向：
+
+
+arXiv链接：
+
+
 
 ==================================================
 
 
+
+要求：
+
+不要简单翻译。
+
+请站在未来2-3年建筑与设计研究趋势角度分析。
+
+
 论文：
 
-{text}
+{content}
 
 
 """
@@ -556,17 +576,17 @@ AI + TouchDesigner + Interactive Art + Spatial Design + Computational Design + A
 
     response=client.chat.completions.create(
 
+
         model="deepseek-v4-flash",
+
 
         messages=[
 
             {
 
-                "role":
-                "user",
+                "role":"user",
 
-                "content":
-                prompt
+                "content":prompt
 
             }
 
@@ -575,7 +595,9 @@ AI + TouchDesigner + Interactive Art + Spatial Design + Computational Design + A
     )
 
 
+
     return response.choices[0].message.content
+
 
 
 
@@ -584,18 +606,25 @@ AI + TouchDesigner + Interactive Art + Spatial Design + Computational Design + A
 # Email
 # ==================================================
 
-def send_email(content):
+def send_email(
+
+        content
+
+):
 
 
     greetings=[
 
+
         "🐷超级贝猪，今天也要认真学习哦！",
 
-        "🐷超级贝猪，新的论文灵感已经送达啦！",
+        "🐷超级贝猪，新的AI前沿论文已经送达啦！",
 
-        "🐷超级贝猪，坚持阅读，未来的创新来自每天积累。"
+        "🐷超级贝猪，坚持每天阅读，未来创新来自今天的积累。"
+
 
     ]
+
 
 
     body=(
@@ -627,16 +656,20 @@ def send_email(content):
 
     msg["Subject"]=Header(
 
-        "🐷超级贝猪每日论文分析",
+        "🐷超级贝猪每日AI前沿论文",
 
         "utf-8"
 
     )
 
 
+
     msg["From"]=SENDER
 
+
     msg["To"]=RECEIVER
+
+
 
 
 
@@ -649,6 +682,7 @@ def send_email(content):
     )
 
 
+
     server.login(
 
         SENDER,
@@ -656,6 +690,7 @@ def send_email(content):
         SENDER_PASSWORD
 
     )
+
 
 
     server.sendmail(
@@ -675,7 +710,10 @@ def send_email(content):
     )
 
 
+
     server.quit()
+
+
 
 
 
@@ -684,7 +722,9 @@ def send_email(content):
 # ==================================================
 
 print(
-    "Collecting papers..."
+
+    "Collecting arXiv papers..."
+
 )
 
 
@@ -693,23 +733,16 @@ history=load_history()
 
 
 
-papers=[]
-
-
-papers.extend(
-    search_arxiv()
-)
-
-
-papers.extend(
-    search_openalex()
-)
+papers=search_arxiv()
 
 
 
 print(
-    len(papers),
-    "candidate papers"
+
+    "Collected:",
+
+    len(papers)
+
 )
 
 
@@ -724,7 +757,28 @@ papers=remove_duplicate(
 
 
 
-papers=ranking(
+print(
+
+    "New papers:",
+
+    len(papers)
+
+)
+
+
+
+if not papers:
+
+
+    raise Exception(
+
+        "No new papers"
+
+    )
+
+
+
+papers=rank_papers(
 
     papers
 
@@ -733,13 +787,16 @@ papers=ranking(
 
 
 print(
-    "Selected",
+
+    "Selected:",
+
     len(papers)
+
 )
 
 
 
-result=analyze(
+result=analyze_papers(
 
     papers
 
@@ -755,17 +812,18 @@ send_email(
 
 
 
-for p in papers:
+for paper in papers:
+
 
     history["papers"].append({
 
         "title":
-        p["title"],
 
-        "doi":
-        p["doi"],
+        paper["title"],
+
 
         "date":
+
         str(datetime.now())
 
     })
@@ -781,5 +839,7 @@ save_history(
 
 
 print(
-    "Finished"
+
+    "Finished successfully"
+
 )
