@@ -1,3 +1,24 @@
 {
-    "papers": []
+  "papers": [
+    {
+      "title": "Ageing, Digital Literacy, and Interaction Modality in Immer-sive Virtual Reality: Psychomotor Performance, Cognitive Flexibility, and Their Processing-Speed Association",
+      "date": "2026-09-18 03:48:37.528486"
+    },
+    {
+      "title": "ScienceIDE: Turning World's Scientific Codebase into Agent Learnable Environments",
+      "date": "2026-09-18 03:48:37.528507"
+    },
+    {
+      "title": "RISC-V and machine learning: a survey",
+      "date": "2026-09-18 03:48:37.528510"
+    },
+    {
+      "title": "Harnessing Generative UI for Education: Tailored Learning Interactives",
+      "date": "2026-09-18 03:48:37.528513"
+    },
+    {
+      "title": "Prepared Or Unprepared? Evaluating Healthcare Workforce Readiness for Clinical Adoption of Artificial Intelligence in Nigeria",
+      "date": "2026-09-18 03:48:37.528515"
+    }
+  ]
 }
