@@ -1,18 +1,16 @@
 name: Daily Research Agent
 
 
-on:
+"on":
 
   schedule:
 
-    # 每天北京时间 10:30 自动执行
-    # GitHub Actions 使用 UTC
-    # 10:30 北京时间 = 02:30 UTC
-    - cron: '30 2 * * *'
+    # 北京时间每天10:30
+    # UTC 02:30
+    - cron: "30 2 * * *"
 
 
   workflow_dispatch:
-
 
 
 permissions:
@@ -20,34 +18,25 @@ permissions:
   contents: read
 
 
-
 jobs:
 
-
   research:
-
 
     runs-on: ubuntu-latest
 
 
-
     steps:
 
-
     - name: Checkout repository
-
       uses: actions/checkout@v4
 
 
-
     - name: Setup Python
-
       uses: actions/setup-python@v5
 
       with:
 
         python-version: "3.11"
-
 
 
     - name: Install dependencies
@@ -57,16 +46,13 @@ jobs:
         pip install -r requirements.txt
 
 
-
     - name: Run Research Agent
 
       env:
 
-
         DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
 
         DEEPSEEK_API_BASE: ${{ secrets.DEEPSEEK_API_BASE }}
-
 
         SENDER: ${{ secrets.SENDER }}
 
@@ -77,7 +63,6 @@ jobs:
         SENDER_PASSWORD: ${{ secrets.SENDER_PASSWORD }}
 
 
-
-      run: |
+      run:
 
         python main.py
