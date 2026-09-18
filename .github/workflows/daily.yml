@@ -7,7 +7,7 @@ name: Daily Research Agent
 
     # 北京时间每天10:30
     # UTC 02:30
-    - cron: "30 2 * * *"
+    - cron: "20 4 * * *"
 
 
   workflow_dispatch:
