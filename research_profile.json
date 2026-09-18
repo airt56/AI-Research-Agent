@@ -1,0 +1,63 @@
+{
+    "researcher": "Super Beizhu",
+
+    "research_topics": [
+        "Artificial Intelligence",
+        "Generative AI",
+        "Human Computer Interaction",
+        "Interactive Art",
+        "TouchDesigner",
+        "Computational Design",
+        "Digital Fabrication",
+        "Interactive Architecture",
+        "Smart Architecture",
+        "Spatial Computing",
+        "Virtual Reality",
+        "Augmented Reality",
+        "Elderly Architecture",
+        "Age-friendly Housing",
+        "Healthy Aging Environment",
+        "Healthcare Architecture",
+        "Environmental Psychology"
+    ],
+
+
+    "keywords": [
+        "AI architecture",
+        "generative design",
+        "interactive space",
+        "human computer interaction",
+        "spatial computing",
+        "virtual reality",
+        "augmented reality",
+        "elderly housing",
+        "aging environment",
+        "smart home",
+        "computational design"
+    ],
+
+
+    "preferred_sources": [
+
+        "SCI Journal",
+        "Top Conference",
+        "arXiv"
+
+    ],
+
+
+    "weights": {
+
+        "AI": 0.25,
+
+        "Architecture": 0.25,
+
+        "HCI": 0.20,
+
+        "Elderly Architecture": 0.15,
+
+        "Interactive Design": 0.15
+
+    }
+
+}
