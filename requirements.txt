@@ -1,3 +1,8 @@
 openai
-python-dotenv
 requests
+feedparser
+beautifulsoup4
+sentence-transformers
+scikit-learn
+numpy
+python-dotenv
