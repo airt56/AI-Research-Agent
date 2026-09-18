@@ -2,7 +2,7 @@ name: Daily Research Agent
 
 on:
   schedule:
-    - cron: "44 5 * * *"
+    - cron: "10 5 * * *"
   workflow_dispatch:
   push:
     paths:
