@@ -5,13 +5,20 @@ on:
 
   schedule:
 
-    # 每天北京时间10:00运行
-    # GitHub使用UTC时间，北京时间=UTC+8
-    - cron: '0 2 * * *'
+    # 每天北京时间 10:30 执行
+    # GitHub Actions 使用 UTC，北京时间 = UTC+8
+    # 10:30 北京时间 = 02:30 UTC
+    - cron: '30 2 * * *'
 
 
-  # 保留手动运行
+  # 保留手动运行按钮
   workflow_dispatch:
+
+
+
+permissions:
+
+  contents: read
 
 
 
@@ -57,7 +64,7 @@ jobs:
       env:
 
 
-        # DeepSeek
+        # DeepSeek API
 
         DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
 
