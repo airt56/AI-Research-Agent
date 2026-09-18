@@ -1,6 +1,5 @@
 {
     "researcher": "Super Beizhu",
-
     "research_topics": [
         "Artificial Intelligence",
         "Generative AI",
@@ -20,8 +19,6 @@
         "Healthcare Architecture",
         "Environmental Psychology"
     ],
-
-
     "keywords": [
         "AI architecture",
         "generative design",
@@ -35,29 +32,47 @@
         "smart home",
         "computational design"
     ],
-
-
     "preferred_sources": [
-
         "SCI Journal",
         "Top Conference",
         "arXiv"
-
     ],
-
-
+    "preferred_arxiv_categories": [
+        "cs.AI",
+        "cs.HC",
+        "cs.CV",
+        "cs.LG",
+        "cs.GR",
+        "cs.CY",
+        "eess.IV",
+        "eess.SP"
+    ],
+    "research_direction": [
+        "Artificial Intelligence",
+        "Human Computer Interaction",
+        "Interactive Art",
+        "TouchDesigner",
+        "Computational Design",
+        "Interactive Architecture",
+        "Smart Architecture",
+        "Spatial Computing",
+        "Elderly Architecture",
+        "Age-friendly Housing"
+    ],
+    "future_technology_interest": [
+        "Generative AI",
+        "Digital Fabrication",
+        "Virtual Reality",
+        "Augmented Reality",
+        "Healthy Aging Environment",
+        "Healthcare Architecture",
+        "Environmental Psychology"
+    ],
     "weights": {
-
         "AI": 0.25,
-
         "Architecture": 0.25,
-
         "HCI": 0.20,
-
         "Elderly Architecture": 0.15,
-
         "Interactive Design": 0.15
-
     }
-
 }

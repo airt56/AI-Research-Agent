@@ -77,3 +77,14 @@ jobs:
       run:
 
         python main.py
+
+    - name: Commit updated history
+
+      if: always()
+
+      run: |
+        git config user.name "github-actions"
+        git config user.email "github-actions@github.com"
+        git add papers_history.json
+        git diff --cached --quiet || git commit -m "Update papers_history.json"
+        git push

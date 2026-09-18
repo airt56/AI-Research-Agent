@@ -298,12 +298,6 @@ def rank_papers(
 ):
 
 
-    if len(papers)<=5:
-
-        return papers
-
-
-
     print(
 
         "Loading embedding model..."
@@ -464,7 +458,7 @@ arXiv链接:
 
 相关度评分:
 
-{paper['score']}
+{paper.get('score', 0)}
 
 
 
