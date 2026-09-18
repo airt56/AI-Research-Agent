@@ -5,8 +5,8 @@ name: Daily Research Agent
 
   schedule:
 
-    # 北京时间每天10:30
-    # UTC 02:30
+    # 北京时间每天12:20
+    # UTC 04:20
     - cron: "20 4 * * *"
 
 
