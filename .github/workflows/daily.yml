@@ -3,15 +3,26 @@ name: Daily Research Agent
 
 on:
 
+  schedule:
+
+    # 每天北京时间10:00运行
+    # GitHub使用UTC时间，北京时间=UTC+8
+    - cron: '0 2 * * *'
+
+
+  # 保留手动运行
   workflow_dispatch:
 
 
+
 jobs:
+
 
   research:
 
 
     runs-on: ubuntu-latest
+
 
 
     steps:
@@ -35,7 +46,7 @@ jobs:
 
     - name: Install dependencies
 
-      run:
+      run: |
 
         pip install -r requirements.txt
 
@@ -44,14 +55,6 @@ jobs:
     - name: Run Research Agent
 
       env:
-
-
-        # Zotero
-
-        ZOTERO_ID: ${{ secrets.ZOTERO_ID }}
-
-        ZOTERO_KEY: ${{ secrets.ZOTERO_KEY }}
-
 
 
         # DeepSeek
@@ -74,6 +77,6 @@ jobs:
 
 
 
-      run:
+      run: |
 
         python main.py
