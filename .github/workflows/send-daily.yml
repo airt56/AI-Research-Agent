@@ -1,0 +1,49 @@
+name: Daily Research Agent
+
+on:
+  schedule:
+    - cron: "36 5 * * *"
+  workflow_dispatch:
+  push:
+    paths:
+      - trigger.txt
+
+permissions:
+  contents: write
+
+jobs:
+  research:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+
+      - name: Run Research Agent
+        env:
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+          DEEPSEEK_API_BASE: ${{ secrets.DEEPSEEK_API_BASE }}
+          SENDER: ${{ secrets.SENDER }}
+          RECEIVER: ${{ secrets.RECEIVER }}
+          RECEIVER_2: ${{ secrets.RECEIVER_2 }}
+          SENDER_PASSWORD: ${{ secrets.SENDER_PASSWORD }}
+        run: python main.py
+
+      - name: Commit updated history
+        if: always()
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add papers_history.json
+          git diff --cached --quiet || git commit -m "Update papers_history.json"
+          git push
