@@ -1,7 +1,7 @@
 name: Daily Research Agent
 
 
-"on":
+on:
 
   schedule:
 
