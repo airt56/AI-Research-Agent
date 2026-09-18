@@ -15,7 +15,7 @@ name: Daily Research Agent
 
 permissions:
 
-  contents: read
+  contents: write
 
 
 jobs:
@@ -27,16 +27,23 @@ jobs:
 
     steps:
 
+
     - name: Checkout repository
+
       uses: actions/checkout@v4
 
 
+
     - name: Setup Python
+
       uses: actions/setup-python@v5
 
       with:
 
         python-version: "3.11"
+
+        cache: "pip"
+
 
 
     - name: Install dependencies
@@ -46,13 +53,17 @@ jobs:
         pip install -r requirements.txt
 
 
+
     - name: Run Research Agent
 
       env:
 
+
         DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
 
         DEEPSEEK_API_BASE: ${{ secrets.DEEPSEEK_API_BASE }}
+
+
 
         SENDER: ${{ secrets.SENDER }}
 
