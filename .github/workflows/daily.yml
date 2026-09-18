@@ -5,9 +5,9 @@ on:
 
   schedule:
 
-    # 北京时间每天13:00
-    # UTC 05:00
-    - cron: "0 5 * * *"
+    # 北京时间每天13:10
+    # UTC 05:10
+    - cron: "10 5 * * *"
 
 
   workflow_dispatch:
