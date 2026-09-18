@@ -1,5 +1,4 @@
 openai
-requests
 feedparser
 sentence-transformers
 scikit-learn
