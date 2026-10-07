@@ -399,6 +399,26 @@
     {
       "title": "AffordCraft: Scalable Construction of Task-Ready Simulation Assets from Single Images",
       "date": "2026-10-06 12:01:58.709003"
+    },
+    {
+      "title": "Living Dashboards: Automatically Self-Updating Visualization Dashboards",
+      "date": "2026-10-07 11:46:36.625930"
+    },
+    {
+      "title": "WorldSolver: Can LLM Agents Simulate the Physical Dynamics via Solver Generation?",
+      "date": "2026-10-07 11:46:36.625951"
+    },
+    {
+      "title": "Hugging Suit: Pneumatically-Actuated System Design for Remote Haptic Experiences",
+      "date": "2026-10-07 11:46:36.625955"
+    },
+    {
+      "title": "Systemization of Knowledge (SoK): Human-Centered AI Safety for Youth",
+      "date": "2026-10-07 11:46:36.625958"
+    },
+    {
+      "title": "CreativeFlow: A One-to-Many Analogical Relation Transfer Method for 3D Asset Generation",
+      "date": "2026-10-07 11:46:36.625960"
     }
   ]
 }
