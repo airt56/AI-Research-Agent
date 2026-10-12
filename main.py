@@ -276,6 +276,7 @@ def analyze_with_deepseek(news_candidates, paper_candidates, profile):
 1. 具备前瞻性、突破性与行业变革价值；
 2. 围绕人工智能（Generative AI / 多模态 / 大模型）、设计行业（空间计算、计算设计、建筑、人机交互 HCI、创意生产力）交叉前沿；
 3. 务必严格遵循如下输出格式规范，语言精练专业，见解深刻。
+4. 【极其重要】每一条新闻和论文，必须填入候选池中对应的序号 original_index 以及完整的原始链接，确保读者能够点击链接查看原文详情。
 
 请严格按以下 JSON 格式返回（只返回纯 JSON，不加任何额外说明或代码块标记之外的文本）：
 
@@ -283,19 +284,21 @@ def analyze_with_deepseek(news_candidates, paper_candidates, profile):
 {{
   "news_items": [
     {{
+      "original_index": 1,
       "title_zh": "新闻中文标题（精炼有力）",
       "summary": "发生事件核心概括（2-3句话阐明发生了什么、核心关键点）",
       "future_impact": "对未来设计行业或人工智能行业的前瞻影响与深远价值",
-      "source_link": "原文链接"
+      "source_link": "从候选池中复制的完整原文链接"
     }}
   ],
   "paper_items": [
     {{
+      "original_index": 1,
       "title_zh": "中文标题",
       "title_en": "原英文标题",
       "authors": "作者列表",
       "published_date": "发表时间",
-      "link": "论文链接",
+      "link": "从候选池中复制的完整论文链接",
       "core_topic": "核心主题（如：生成式3D/空间交互/智能架构）",
       "one_sentence_summary": "一句话概括研究内容",
       "future_impact": "对未来设计行业或人工智能行业的影响与前瞻价值"
@@ -330,10 +333,36 @@ def analyze_with_deepseek(news_candidates, paper_candidates, profile):
             data = json.loads(json_match.group(1))
         else:
             data = json.loads(content)
-        return data
     except Exception as e:
         print(f"Notice: Failed to parse pure JSON ({e}), returning raw content wrapper.")
         return {"raw_content": content}
+
+    # Guarantee accurate, clickable links by matching against candidate pools
+    for item in data.get("news_items", []):
+        idx = item.get("original_index")
+        if isinstance(idx, int) and 1 <= idx <= len(news_candidates):
+            orig_link = news_candidates[idx - 1].get("link", "").strip()
+            if orig_link:
+                item["source_link"] = orig_link
+        # Fallback if link is empty or generic
+        if not item.get("source_link") and news_candidates:
+            item["source_link"] = news_candidates[0].get("link", "")
+
+    for p in data.get("paper_items", []):
+        idx = p.get("original_index")
+        if isinstance(idx, int) and 1 <= idx <= len(paper_candidates):
+            orig_paper = paper_candidates[idx - 1]
+            if orig_paper.get("link"):
+                p["link"] = orig_paper["link"].strip()
+            if orig_paper.get("authors") and not p.get("authors"):
+                p["authors"] = orig_paper["authors"]
+            if orig_paper.get("published") and not p.get("published_date"):
+                p["published_date"] = orig_paper["published"]
+        # Fallback if link is missing
+        if not p.get("link") and paper_candidates:
+            p["link"] = paper_candidates[0].get("link", "")
+
+    return data
 
 
 # ==================================================
@@ -369,22 +398,29 @@ def render_email_content(data):
     ]
 
     for i, item in enumerate(news_list, 1):
+        source_link = item.get('source_link', '#')
         plain_lines.append(f"\n{i}. {item.get('title_zh', '')}")
         plain_lines.append(f"   ▶ 事件概括: {item.get('summary', '')}")
         plain_lines.append(f"   ▶ 前瞻影响: {item.get('future_impact', '')}")
-        plain_lines.append(f"   ▶ 参考链接: {item.get('source_link', '')}")
+        plain_lines.append(f"   🔗 完整报道链接: {source_link}")
 
     plain_lines.append(f"\n\n【📚 精选前瞻学术论文 TOP 3】")
     plain_lines.append(f"──────────────────────────────────────────")
 
     for i, p in enumerate(paper_list, 1):
+        paper_link = p.get('link', '#')
+        pdf_link = paper_link.replace('/abs/', '/pdf/')
+        if '/pdf/' in pdf_link and not pdf_link.endswith('.pdf'):
+            pdf_link += '.pdf'
+
         plain_lines.append(f"\n{i}. {p.get('title_zh', '')}")
         plain_lines.append(f"   原名: {p.get('title_en', '')}")
         plain_lines.append(f"   作者: {p.get('authors', '')} | 发表: {p.get('published_date', '')}")
         plain_lines.append(f"   主题: {p.get('core_topic', '')}")
         plain_lines.append(f"   ▶ 一句话总结: {p.get('one_sentence_summary', '')}")
         plain_lines.append(f"   ▶ 行业前瞻价值: {p.get('future_impact', '')}")
-        plain_lines.append(f"   ▶ 论文链接: {p.get('link', '')}")
+        plain_lines.append(f"   🔗 论文主页链接: {paper_link}")
+        plain_lines.append(f"   📥 PDF直达链接: {pdf_link}")
 
     plain_lines.append(f"\n══════════════════════════════════════════")
     plain_lines.append(f"坚持每日阅读，探索智能与设计的美好未来。")
@@ -393,6 +429,7 @@ def render_email_content(data):
     # 2. Modern Card HTML Version (for QQ Mail & mobile)
     news_cards_html = ""
     for i, item in enumerate(news_list, 1):
+        source_link = item.get('source_link', '#')
         news_cards_html += f"""
         <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 18px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
             <div style="display: flex; align-items: baseline; margin-bottom: 8px;">
@@ -403,18 +440,29 @@ def render_email_content(data):
             <div style="background: #f8fafc; border-left: 3px solid #3b82f6; padding: 10px 12px; margin: 10px 0; border-radius: 0 6px 6px 0;">
                 <p style="color: #1e293b; font-size: 13px; line-height: 1.5; margin: 0;"><strong>💡 前瞻影响：</strong>{item.get('future_impact', '')}</p>
             </div>
-            <div style="margin-top: 10px;">
-                <a href="{item.get('source_link', '#')}" target="_blank" style="color: #2563eb; font-size: 12px; text-decoration: none; word-break: break-all;">🔗 查看原文报道 &rarr;</a>
+            <!-- Clickable Action Link -->
+            <div style="margin-top: 14px; padding-top: 12px; border-top: 1px dashed #e2e8f0;">
+                <a href="{source_link}" target="_blank" style="display: inline-block; background: #2563eb; color: #ffffff; font-size: 13px; font-weight: 600; padding: 7px 16px; border-radius: 6px; text-decoration: none;">
+                    🔗 点击阅读完整新闻 &rarr;
+                </a>
+                <div style="margin-top: 6px; font-size: 11px; color: #64748b; word-break: break-all;">
+                    原文链接直达：<a href="{source_link}" target="_blank" style="color: #2563eb; text-decoration: underline;">{source_link}</a>
+                </div>
             </div>
         </div>
         """
 
     paper_cards_html = ""
     for i, p in enumerate(paper_list, 1):
+        paper_link = p.get('link', '#')
+        pdf_link = paper_link.replace('/abs/', '/pdf/')
+        if '/pdf/' in pdf_link and not pdf_link.endswith('.pdf'):
+            pdf_link += '.pdf'
+
         paper_cards_html += f"""
         <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 18px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
             <div style="margin-bottom: 6px;">
-                <span style="background: #3b82f6; color: #ffffff; font-size: 11px; font-weight: bold; padding: 2px 8px; border-radius: 4px; margin-right: 6px;">论文 0{i}</span>
+                <span style="background: #059669; color: #ffffff; font-size: 11px; font-weight: bold; padding: 2px 8px; border-radius: 4px; margin-right: 6px;">论文 0{i}</span>
                 <span style="background: #e0e7ff; color: #3730a3; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 4px;">{p.get('core_topic', 'AI Research')}</span>
             </div>
             <h4 style="font-size: 16px; font-weight: 700; color: #0f172a; margin: 6px 0 2px 0;">{p.get('title_zh', '')}</h4>
@@ -426,8 +474,19 @@ def render_email_content(data):
             <div style="background: #f0fdf4; border-left: 3px solid #10b981; padding: 10px 12px; margin: 10px 0; border-radius: 0 6px 6px 0;">
                 <p style="color: #064e3b; font-size: 13px; line-height: 1.5; margin: 0;"><strong>🚀 行业前瞻价值：</strong>{p.get('future_impact', '')}</p>
             </div>
-            <div style="margin-top: 10px;">
-                <a href="{p.get('link', '#')}" target="_blank" style="color: #2563eb; font-size: 12px; text-decoration: none; word-break: break-all;">📄 阅读全文 (arXiv) &rarr;</a>
+            <!-- Clickable Action Links -->
+            <div style="margin-top: 14px; padding-top: 12px; border-top: 1px dashed #e2e8f0;">
+                <div style="margin-bottom: 8px;">
+                    <a href="{paper_link}" target="_blank" style="display: inline-block; background: #059669; color: #ffffff; font-size: 13px; font-weight: 600; padding: 7px 16px; border-radius: 6px; text-decoration: none; margin-right: 8px;">
+                        📄 查看论文主页 (arXiv) &rarr;
+                    </a>
+                    <a href="{pdf_link}" target="_blank" style="display: inline-block; background: #f0fdf4; color: #047857; border: 1px solid #a7f3d0; font-size: 13px; font-weight: 600; padding: 6px 14px; border-radius: 6px; text-decoration: none;">
+                        📥 阅读/下载 PDF 原文 &rarr;
+                    </a>
+                </div>
+                <div style="font-size: 11px; color: #64748b; word-break: break-all;">
+                    论文链接直达：<a href="{paper_link}" target="_blank" style="color: #059669; text-decoration: underline;">{paper_link}</a>
+                </div>
             </div>
         </div>
         """
