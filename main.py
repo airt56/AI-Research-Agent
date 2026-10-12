@@ -269,39 +269,41 @@ def analyze_with_deepseek(news_candidates, paper_candidates, profile):
     for i, p in enumerate(paper_candidates, 1):
         paper_text += f"[{i}] 标题: {p['title']}\n    作者: {p['authors']}\n    日期: {p['published']}\n    链接: {p['link']}\n    摘要: {p['abstract'][:400]}...\n\n"
 
-    prompt = f"""你是一名顶级科技前沿智库专家与设计计算领域学者。
-请分析以下提供的候选新闻和候选论文，精选出【3 条最重大的 AI 与设计前瞻新闻】以及【3 篇最具前瞻性的学术研究论文】。
+    prompt = f"""你是一名资深科技与设计前沿智库分析师。
+请从以下候选新闻和论文中，精选出【3 条最重大 AI 与设计前瞻新闻】和【3 篇前瞻学术论文】。
 
-选拔标准：
-1. 具备前瞻性、突破性与行业变革价值；
-2. 围绕人工智能（Generative AI / 多模态 / 大模型）、设计行业（空间计算、计算设计、建筑、人机交互 HCI、创意生产力）交叉前沿；
-3. 务必严格遵循如下输出格式规范，语言精练专业，见解深刻。
-4. 【极其重要】每一条新闻和论文，必须填入候选池中对应的序号 original_index 以及完整的原始链接，确保读者能够点击链接查看原文详情。
+【极其重要的写作原则】：
+1. 风格定位：极简高能导读流（Quick-Bite Digest）。文字务必极其精简！严禁长篇大论和冗余废话！
+2. 核心目的：只提炼最抓人眼球的核心事实与前瞻亮点，引导读者【点击链接阅读完整原文】！
+3. 字数与格式铁律：
+   - 每篇新闻：【发生核心】严格限制为 1 句话（30~45 字以内，说明谁发布/发生了什么重大动作）；【前瞻启示】严格限制为 1 句话（25~35 字以内，一针见血点出对设计或AI行业的深远价值）。
+   - 每篇论文：【核心亮点】严格限制为 1 句话（30~45 字以内，说明提出什么新技术或攻克了什么痛点）；【行业价值】严格限制为 1 句话（25~35 字以内，说明对未来设计的启发）。
+4. 必须填入对应的序号 original_index 和完整的原始链接 source_link / link。
 
-请严格按以下 JSON 格式返回（只返回纯 JSON，不加任何额外说明或代码块标记之外的文本）：
+请严格按以下 JSON 格式返回（只返回纯 JSON，不加任何额外说明）：
 
 ```json
 {{
   "news_items": [
     {{
       "original_index": 1,
-      "title_zh": "新闻中文标题（精炼有力）",
-      "summary": "发生事件核心概括（2-3句话阐明发生了什么、核心关键点）",
-      "future_impact": "对未来设计行业或人工智能行业的前瞻影响与深远价值",
+      "title_zh": "新闻精炼中文标题（15字以内）",
+      "summary": "极简一句话核心事实（30-45字）",
+      "future_impact": "极简一句话前瞻启示（25-35字）",
       "source_link": "从候选池中复制的完整原文链接"
     }}
   ],
   "paper_items": [
     {{
       "original_index": 1,
-      "title_zh": "中文标题",
+      "title_zh": "精炼中文标题（15字以内）",
       "title_en": "原英文标题",
-      "authors": "作者列表",
+      "authors": "第一作者等简写",
       "published_date": "发表时间",
       "link": "从候选池中复制的完整论文链接",
-      "core_topic": "核心主题（如：生成式3D/空间交互/智能架构）",
-      "one_sentence_summary": "一句话概括研究内容",
-      "future_impact": "对未来设计行业或人工智能行业的影响与前瞻价值"
+      "core_topic": "主题标签（2-4字）",
+      "one_sentence_summary": "极简一句话核心亮点（30-45字）",
+      "future_impact": "极简一句话行业启发（25-35字）"
     }}
   ]
 }}
@@ -389,23 +391,23 @@ def render_email_content(data):
 
     # 1. Plain Text Version
     plain_lines = [
-        f"══════════════════════════════════════════",
-        f"  AI & 设计前瞻日报 | {date_str}",
-        f"══════════════════════════════════════════",
+        f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+        f"  🚀 AI & 设计前瞻导读 | {date_str}",
+        f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
         f"",
         f"【🔥 今日重大 AI & 设计新闻 TOP 3】",
-        f"──────────────────────────────────────────"
+        f"────────────────────────────────────────"
     ]
 
     for i, item in enumerate(news_list, 1):
         source_link = item.get('source_link', '#')
-        plain_lines.append(f"\n{i}. {item.get('title_zh', '')}")
-        plain_lines.append(f"   ▶ 事件概括: {item.get('summary', '')}")
-        plain_lines.append(f"   ▶ 前瞻影响: {item.get('future_impact', '')}")
-        plain_lines.append(f"   🔗 完整报道链接: {source_link}")
+        plain_lines.append(f"\n[{i}] {item.get('title_zh', '')}")
+        plain_lines.append(f"  ⚡ 核心: {item.get('summary', '')}")
+        plain_lines.append(f"  💡 启示: {item.get('future_impact', '')}")
+        plain_lines.append(f"  👉 查看报道全文: {source_link}")
 
     plain_lines.append(f"\n\n【📚 精选前瞻学术论文 TOP 3】")
-    plain_lines.append(f"──────────────────────────────────────────")
+    plain_lines.append(f"────────────────────────────────────────")
 
     for i, p in enumerate(paper_list, 1):
         paper_link = p.get('link', '#')
@@ -413,17 +415,16 @@ def render_email_content(data):
         if '/pdf/' in pdf_link and not pdf_link.endswith('.pdf'):
             pdf_link += '.pdf'
 
-        plain_lines.append(f"\n{i}. {p.get('title_zh', '')}")
-        plain_lines.append(f"   原名: {p.get('title_en', '')}")
-        plain_lines.append(f"   作者: {p.get('authors', '')} | 发表: {p.get('published_date', '')}")
-        plain_lines.append(f"   主题: {p.get('core_topic', '')}")
-        plain_lines.append(f"   ▶ 一句话总结: {p.get('one_sentence_summary', '')}")
-        plain_lines.append(f"   ▶ 行业前瞻价值: {p.get('future_impact', '')}")
-        plain_lines.append(f"   🔗 论文主页链接: {paper_link}")
-        plain_lines.append(f"   📥 PDF直达链接: {pdf_link}")
+        plain_lines.append(f"\n[{i}] {p.get('title_zh', '')} · {p.get('core_topic', 'AI')}")
+        plain_lines.append(f"  原名: {p.get('title_en', '')}")
+        plain_lines.append(f"  作者: {p.get('authors', '')} · {p.get('published_date', '')}")
+        plain_lines.append(f"  ⚡ 亮点: {p.get('one_sentence_summary', '')}")
+        plain_lines.append(f"  💡 价值: {p.get('future_impact', '')}")
+        plain_lines.append(f"  👉 论文主页: {paper_link}")
+        plain_lines.append(f"  📥 PDF下载: {pdf_link}")
 
-    plain_lines.append(f"\n══════════════════════════════════════════")
-    plain_lines.append(f"坚持每日阅读，探索智能与设计的美好未来。")
+    plain_lines.append(f"\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+    plain_lines.append(f"每日20秒极简速读，点击链接深入研读。")
     plain_text = "\n".join(plain_lines)
 
     # 2. Modern Card HTML Version (for QQ Mail & mobile)
@@ -431,23 +432,22 @@ def render_email_content(data):
     for i, item in enumerate(news_list, 1):
         source_link = item.get('source_link', '#')
         news_cards_html += f"""
-        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 18px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
-            <div style="display: flex; align-items: baseline; margin-bottom: 8px;">
-                <span style="background: #ef4444; color: #ffffff; font-size: 11px; font-weight: bold; padding: 2px 8px; border-radius: 4px; margin-right: 8px;">新闻 0{i}</span>
-                <span style="font-size: 16px; font-weight: 700; color: #0f172a;">{item.get('title_zh', '')}</span>
+        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px 16px; margin-bottom: 14px; box-shadow: 0 1px 2px rgba(0,0,0,0.03);">
+            <div style="margin-bottom: 6px;">
+                <span style="background: #ef4444; color: #ffffff; font-size: 11px; font-weight: bold; padding: 1px 7px; border-radius: 3px; margin-right: 6px;">新闻 0{i}</span>
+                <span style="font-size: 15px; font-weight: 700; color: #0f172a;">{item.get('title_zh', '')}</span>
             </div>
-            <p style="color: #334155; font-size: 14px; line-height: 1.6; margin: 8px 0;"><strong>事件核心：</strong>{item.get('summary', '')}</p>
-            <div style="background: #f8fafc; border-left: 3px solid #3b82f6; padding: 10px 12px; margin: 10px 0; border-radius: 0 6px 6px 0;">
-                <p style="color: #1e293b; font-size: 13px; line-height: 1.5; margin: 0;"><strong>💡 前瞻影响：</strong>{item.get('future_impact', '')}</p>
+            <div style="color: #334155; font-size: 13px; line-height: 1.5; margin: 6px 0 3px 0;">
+                <strong>⚡ 核心：</strong>{item.get('summary', '')}
             </div>
-            <!-- Clickable Action Link -->
-            <div style="margin-top: 14px; padding-top: 12px; border-top: 1px dashed #e2e8f0;">
-                <a href="{source_link}" target="_blank" style="display: inline-block; background: #2563eb; color: #ffffff; font-size: 13px; font-weight: 600; padding: 7px 16px; border-radius: 6px; text-decoration: none;">
-                    🔗 点击阅读完整新闻 &rarr;
+            <div style="color: #1e293b; font-size: 13px; line-height: 1.5; margin: 3px 0 10px 0;">
+                <strong>💡 启示：</strong>{item.get('future_impact', '')}
+            </div>
+            <!-- Prominent Action Button -->
+            <div style="padding-top: 8px; border-top: 1px dashed #e2e8f0;">
+                <a href="{source_link}" target="_blank" style="display: block; text-align: center; background: #2563eb; color: #ffffff; font-size: 13px; font-weight: 600; padding: 8px 12px; border-radius: 6px; text-decoration: none;">
+                    👉 点击查看完整报道全文 &rarr;
                 </a>
-                <div style="margin-top: 6px; font-size: 11px; color: #64748b; word-break: break-all;">
-                    原文链接直达：<a href="{source_link}" target="_blank" style="color: #2563eb; text-decoration: underline;">{source_link}</a>
-                </div>
             </div>
         </div>
         """
@@ -460,32 +460,30 @@ def render_email_content(data):
             pdf_link += '.pdf'
 
         paper_cards_html += f"""
-        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 18px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
-            <div style="margin-bottom: 6px;">
-                <span style="background: #059669; color: #ffffff; font-size: 11px; font-weight: bold; padding: 2px 8px; border-radius: 4px; margin-right: 6px;">论文 0{i}</span>
-                <span style="background: #e0e7ff; color: #3730a3; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 4px;">{p.get('core_topic', 'AI Research')}</span>
+        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px 16px; margin-bottom: 14px; box-shadow: 0 1px 2px rgba(0,0,0,0.03);">
+            <div style="margin-bottom: 4px;">
+                <span style="background: #059669; color: #ffffff; font-size: 11px; font-weight: bold; padding: 1px 7px; border-radius: 3px; margin-right: 6px;">论文 0{i}</span>
+                <span style="background: #ecfdf5; color: #047857; font-size: 11px; font-weight: 600; padding: 1px 7px; border-radius: 3px;">{p.get('core_topic', 'AI')}</span>
             </div>
-            <h4 style="font-size: 16px; font-weight: 700; color: #0f172a; margin: 6px 0 2px 0;">{p.get('title_zh', '')}</h4>
-            <div style="color: #64748b; font-size: 12px; font-style: italic; margin-bottom: 8px;">{p.get('title_en', '')}</div>
-            <div style="color: #64748b; font-size: 12px; margin-bottom: 10px;">
-                👥 {p.get('authors', '')} &nbsp;|&nbsp; 📅 {p.get('published_date', '')}
+            <div style="font-size: 15px; font-weight: 700; color: #0f172a; margin-bottom: 2px;">{p.get('title_zh', '')}</div>
+            <div style="color: #64748b; font-size: 11px; margin-bottom: 6px;">
+                👥 {p.get('authors', '')} · 📅 {p.get('published_date', '')}
             </div>
-            <p style="color: #334155; font-size: 14px; line-height: 1.6; margin: 8px 0;"><strong>📌 一句话概括：</strong>{p.get('one_sentence_summary', '')}</p>
-            <div style="background: #f0fdf4; border-left: 3px solid #10b981; padding: 10px 12px; margin: 10px 0; border-radius: 0 6px 6px 0;">
-                <p style="color: #064e3b; font-size: 13px; line-height: 1.5; margin: 0;"><strong>🚀 行业前瞻价值：</strong>{p.get('future_impact', '')}</p>
+            <div style="color: #334155; font-size: 13px; line-height: 1.5; margin: 4px 0 3px 0;">
+                <strong>⚡ 亮点：</strong>{p.get('one_sentence_summary', '')}
             </div>
-            <!-- Clickable Action Links -->
-            <div style="margin-top: 14px; padding-top: 12px; border-top: 1px dashed #e2e8f0;">
-                <div style="margin-bottom: 8px;">
-                    <a href="{paper_link}" target="_blank" style="display: inline-block; background: #059669; color: #ffffff; font-size: 13px; font-weight: 600; padding: 7px 16px; border-radius: 6px; text-decoration: none; margin-right: 8px;">
-                        📄 查看论文主页 (arXiv) &rarr;
+            <div style="color: #1e293b; font-size: 13px; line-height: 1.5; margin: 3px 0 10px 0;">
+                <strong>💡 价值：</strong>{p.get('future_impact', '')}
+            </div>
+            <!-- Prominent Action Buttons -->
+            <div style="padding-top: 8px; border-top: 1px dashed #e2e8f0;">
+                <div style="display: flex; gap: 6px;">
+                    <a href="{paper_link}" target="_blank" style="flex: 1; text-align: center; background: #059669; color: #ffffff; font-size: 13px; font-weight: 600; padding: 8px 10px; border-radius: 6px; text-decoration: none; margin-right: 6px;">
+                        👉 查看论文主页 (arXiv) &rarr;
                     </a>
-                    <a href="{pdf_link}" target="_blank" style="display: inline-block; background: #f0fdf4; color: #047857; border: 1px solid #a7f3d0; font-size: 13px; font-weight: 600; padding: 6px 14px; border-radius: 6px; text-decoration: none;">
-                        📥 阅读/下载 PDF 原文 &rarr;
+                    <a href="{pdf_link}" target="_blank" style="text-align: center; background: #f0fdf4; color: #047857; border: 1px solid #a7f3d0; font-size: 13px; font-weight: 600; padding: 8px 12px; border-radius: 6px; text-decoration: none;">
+                        📥 PDF 原文
                     </a>
-                </div>
-                <div style="font-size: 11px; color: #64748b; word-break: break-all;">
-                    论文链接直达：<a href="{paper_link}" target="_blank" style="color: #059669; text-decoration: underline;">{paper_link}</a>
                 </div>
             </div>
         </div>
