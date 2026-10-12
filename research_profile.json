@@ -1,78 +1,38 @@
 {
-    "researcher": "Super Beizhu",
-    "research_topics": [
-        "Artificial Intelligence",
-        "Generative AI",
-        "Human Computer Interaction",
-        "Interactive Art",
-        "TouchDesigner",
-        "Computational Design",
-        "Digital Fabrication",
-        "Interactive Architecture",
-        "Smart Architecture",
-        "Spatial Computing",
-        "Virtual Reality",
-        "Augmented Reality",
-        "Elderly Architecture",
-        "Age-friendly Housing",
-        "Healthy Aging Environment",
-        "Healthcare Architecture",
-        "Environmental Psychology"
-    ],
-    "keywords": [
-        "AI architecture",
-        "generative design",
-        "interactive space",
-        "human computer interaction",
-        "spatial computing",
-        "virtual reality",
-        "augmented reality",
-        "elderly housing",
-        "aging environment",
-        "smart home",
-        "computational design"
-    ],
-    "preferred_sources": [
-        "SCI Journal",
-        "Top Conference",
-        "arXiv"
-    ],
-    "preferred_arxiv_categories": [
-        "cs.AI",
-        "cs.HC",
-        "cs.CV",
-        "cs.LG",
-        "cs.GR",
-        "cs.CY",
-        "eess.IV",
-        "eess.SP"
-    ],
-    "research_direction": [
-        "Artificial Intelligence",
-        "Human Computer Interaction",
-        "Interactive Art",
-        "TouchDesigner",
-        "Computational Design",
-        "Interactive Architecture",
-        "Smart Architecture",
-        "Spatial Computing",
-        "Elderly Architecture",
-        "Age-friendly Housing"
-    ],
-    "future_technology_interest": [
-        "Generative AI",
-        "Digital Fabrication",
-        "Virtual Reality",
-        "Augmented Reality",
-        "Healthy Aging Environment",
-        "Healthcare Architecture",
-        "Environmental Psychology"
-    ],
-    "weights": {
-        "AI": 0.25,
-        "Architecture": 0.25,
-        "HCI": 0.20,
-        "Elderly Architecture": 0.15,
-        "Interactive Design": 0.15
-    }
+  "system_title": "AI & Design Daily Digest",
+  "focus_areas": [
+    "Artificial Intelligence",
+    "Generative AI",
+    "Design & Creative AI",
+    "Computational Design",
+    "Architectural & Spatial Design",
+    "Human Computer Interaction",
+    "Spatial Computing & Mixed Reality",
+    "Interactive Systems"
+  ],
+  "keywords": [
+    "AI design",
+    "generative AI",
+    "computational design",
+    "spatial computing",
+    "human computer interaction",
+    "creative AI",
+    "multimodal models",
+    "diffusion models",
+    "digital fabrication",
+    "interactive architecture"
+  ],
+  "preferred_arxiv_categories": [
+    "cs.AI",
+    "cs.HC",
+    "cs.CV",
+    "cs.GR",
+    "cs.CY"
+  ],
+  "news_rss_feeds": [
+    "https://news.google.com/rss/search?q=(Artificial+Intelligence+OR+AI)+AND+(Design+OR+Architecture+OR+Creative)+when:2d&hl=en-US&gl=US&ceid=US:en",
+    "https://news.google.com/rss/search?q=(OpenAI+OR+Anthropic+OR+DeepSeek+OR+\"Generative+AI\")+when:2d&hl=en-US&gl=US&ceid=US:en",
+    "https://news.google.com/rss/search?q=(人工智能+OR+大模型+OR+AIGC)+AND+(设计+OR+创意+OR+空间)+when:2d&hl=zh-CN&gl=CN&ceid=CN:zh-Hans",
+    "https://techcrunch.com/category/artificial-intelligence/feed/"
+  ]
 }
